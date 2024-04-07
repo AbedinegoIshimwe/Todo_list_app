@@ -1,0 +1,156 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List App</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            background-color: #faf9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        input[type="text"] {
+            padding: 8px;
+            margin-right: 10px;
+            font-size: 16px;
+            border-radius: 30px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 30px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .priority {
+            color: red;
+            font-weight: bold;
+        }
+
+        #prioritySelect{
+            padding:10px 20px;
+            margin-right: 10px;
+            border-radius: 30px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="bdy">
+    <h1>To-Do List</h1>
+
+    <input type="text" id="taskInput" placeholder="Enter task">
+    <select id="prioritySelect">
+        <option value="normal">Normal Priority</option>
+        <option value="priority">Priority</option>
+    </select>
+    <button onclick="addTask()">Add Task</button>
+
+</div>
+
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Priority</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="taskList">
+            <!-- Tasks will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Client-side JavaScript code
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const row = taskList.insertRow();
+                row.innerHTML = `
+                    <td>${task.text}</td>
+                    <td class="${task.priority === 'priority' ? 'priority' : ''}">${task.priority}</td>
+                    <td>${task.date}</td>
+                    <td><button onclick="deleteTask(${index})">Delete</button></td>
+                `;
+            });
+        }
+
+        function fetchTasks() {
+            fetch('/api/tasks')
+                .then(response => response.json())
+                .then(tasks => renderTasks(tasks));
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const prioritySelect = document.getElementById('prioritySelect');
+            const taskText = taskInput.value.trim();
+            const priority = prioritySelect.value;
+            if (taskText !== '') {
+                fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: taskText, priority, date: new Date().toLocaleDateString() })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    alert('Task added successfully');
+                    fetchTasks();
+                });
+                taskInput.value = '';
+            }
+        }
+
+        function deleteTask(index) {
+            fetch(`/api/tasks/${index}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                alert('Task deleted successfully');
+                fetchTasks();
+            });
+        }
+
+        fetchTasks();
+    </script>
+
+</body>
+</html>
